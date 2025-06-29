@@ -1,6 +1,3 @@
-// TODO: load a texture on the canvas
-
-
 // retrieving canvas, setting context.
 const canvas = document.querySelector("#webgl");
 const gl = canvas.getContext("webgl2");
@@ -30,14 +27,17 @@ async function main() {
         -1.0, -1.0,
         1.0, 1.0,
         1.0, -1.0
-    ]
+    ];
+
 
     // raw data loaded in the buffer
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-    const vertexArrayObject = gl.createVertexArray();
-    gl.bindVertexArray(vertexArrayObject);
+    const vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
     gl.enableVertexAttribArray(positionAttributeLocation);
 
+
+    // parse buffer data
     const size = 2;
     const type = gl.FLOAT;
     const normalize = false;
@@ -45,17 +45,38 @@ async function main() {
     const offset = 0;
     gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
 
+    // * SET VIEWPORT
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-    // clear
+    // clear canvas
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     // draw
     gl.useProgram(program);
-    gl.bindVertexArray(vertexArrayObject);
+    gl.bindVertexArray(vao);
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+
+    let startTime = performance.now();
+
+    const render = time => {
+        const elapsed = (time - startTime) / 1000 // convert to seconds
+
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        
+        gl.useProgram(program);
+        gl.bindVertexArray(vao);
+
+        gl.uniform1f(gl.getUniformLocation(program, "u_time"), elapsed);
+
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+        requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+
 
 }
 
